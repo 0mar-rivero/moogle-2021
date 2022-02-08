@@ -61,8 +61,7 @@ public class VectorMri : MRI {
 
 	private IEnumerable<float> Weights(Query query) => Corpus.Words().Select(word => CalculateWq(word, query));
 
-	private float Similarity(Query query, string document) {
-		return Weights(query).Zip(Weights(document)).Select(t => t.First * t.Second).Sum() /
-		       (Weights(query).Norm() * Weights(document).Norm());
-	}
+	private float Similarity(Query query, string document)
+		=> Weights(query).Zip(Weights(document)).Select(t => t.First * t.Second).Sum() /
+		   (Weights(query).Norm() * Weights(document).Norm());  
 }
