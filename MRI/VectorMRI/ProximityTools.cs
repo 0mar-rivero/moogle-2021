@@ -7,7 +7,7 @@ internal static class ProximityTools {
 		Math.Sqrt(vector.Select(t => Math.Pow(t, 2)).Sum());
 
 	internal static double InverseProximity(this Corpus.Corpus corpus, Query query, string document) => 1 /
-		(double)query.Proximity()
+		(double)query.Proximity
 			.Select(proximitySet => corpus.Proximity(document, proximitySet, proximitySet.Count, PowGenerator(5, 13)))
 			.Select(a => (int)Math.Log(a, 5)).Aggregate(1, (current, a) => current * a);
 

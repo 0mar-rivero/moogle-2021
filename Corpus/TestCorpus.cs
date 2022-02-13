@@ -1,6 +1,5 @@
-﻿using System.Reflection.Metadata;
-using System.Text.Json;
-using System.Text.Json.Nodes;
+﻿using System.Text.Json;
+using Corpus.Tools;
 
 namespace Corpus;
 
@@ -117,7 +116,7 @@ public class TestCorpus : Corpus {
 	public override int Proximity(string document, IEnumerable<string> words, int minAmount,
 		IEnumerable<int>? gaps = null) {
 		var indexDictionary = LoadIndexes(document, words);
-		return indexDictionary.Count < minAmount ? int.MaxValue : Tools.Proximity(indexDictionary, gaps, minAmount);
+		return indexDictionary.Count < minAmount ? int.MaxValue : Tools.Tools.Proximity(indexDictionary, gaps, minAmount);
 	}
 
 	private Dictionary<string, List<int>> LoadIndexes(string document, IEnumerable<string> words) =>

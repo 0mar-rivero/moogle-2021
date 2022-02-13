@@ -2,39 +2,42 @@
 using System.Diagnostics;
 using System.Security.AccessControl;
 using System.Security.Cryptography;
+using Corpus.Tools;
+using static Corpus.Tools.Tools;
 
 namespace Corpus;
 
 public class Query {
-	private Dictionary<string, int> _text;
-	private readonly HashSet<string> _exclusions;
-	private readonly HashSet<string> _inclusions;
-	private readonly HashSet<HashSet<string>> _proximity;
-	public readonly int MostRepeatedOccurrences;
+	private readonly Dictionary<string, double> _text;
+	public readonly HashSet<string> Exclusions;
+	public readonly HashSet<string> Inclusions;
+	public readonly HashSet<HashSet<string>> Proximity;
+	public readonly double MostRepeatedOccurrences;
 
-	public Query(string text) {
+	public Query(string text, Corpus corpus) {
 		var rawText = text.ToLower().Split().ToList();
-		_exclusions = new HashSet<string>();
-		_inclusions = new HashSet<string>();
-		_proximity = new HashSet<HashSet<string>>();
-		_text = new Dictionary<string, int>();
-		ProcessQuery(rawText);
+		Exclusions = new HashSet<string>();
+		Inclusions = new HashSet<string>();
+		Proximity = new HashSet<HashSet<string>>();
+		_text = ProcessQuery(rawText);
 		MostRepeatedOccurrences = _text.Values.Max();
 	}
 
-	public int this[string word] => _text.ContainsKey(word) ? _text[word] : 0;
+	public double this[string word] => _text.ContainsKey(word) ? _text[word] : 0;
 	public IEnumerable<string> Words() => _text.Keys;
-	private void ProcessQuery(List<string> rawText) {
+
+	#region RawTextProcessing
+	private Dictionary<string, double> ProcessQuery(List<string> rawText) {
 		ProcessBinProximity(rawText);
 		ProcessNonBinProximity(rawText);
 		ProcessPriority(rawText);
 		foreach (var word in rawText) {
-			if (ToExclude(word)) _exclusions.Add(word.TrimPunctuation());
-			if (ToInclude(word)) _inclusions.Add(word.TrimPunctuation());
+			if (ToExclude(word)) Exclusions.Add(word.TrimPunctuation());
+			if (ToInclude(word)) Inclusions.Add(word.TrimPunctuation());
 		}
 
-		_text = rawText.Select(Tools.TrimPunctuation).Where(word => !Exclusions().Contains(word) && word.Length > 1)
-			.ToDictionary(word => word, word => rawText.Count(i => i == word));
+		return rawText.Select(Tools.Tools.TrimPunctuation).Where(word => !Exclusions.Contains(word) && word.Length > 1)
+			.ToDictionary(word => word, word => (double)rawText.Count(i => i == word));
 	}
 
 	private void ProcessBinProximity(IReadOnlyList<string> rawText) {
@@ -42,7 +45,7 @@ public class Query {
 			if (rawText[i] != "~") continue;
 			var previous = rawText[i - 1].TrimPunctuation();
 			var next = rawText[i + 1].TrimPunctuation();
-			if (previous is not "" && next is not "") _proximity.Add(new HashSet<string> { previous, next });
+			if (previous is not "" && next is not "") Proximity.Add(new HashSet<string> { previous, next });
 		}
 	}
 
@@ -58,7 +61,7 @@ public class Query {
 				if (next is not "") set.Add(next);
 			}
 
-			if (set.Count > 1) _proximity.Add(set);
+			if (set.Count > 1) Proximity.Add(set);
 		}
 	}
 
@@ -84,8 +87,5 @@ public class Query {
 	private static bool ToExclude(string word) => word.StartsWith('!');
 	private static bool ToInclude(string word) => word.StartsWith('^');
 
-	public IEnumerable<string> Inclusions() => _inclusions;
-	public IEnumerable<string> Exclusions() => _exclusions;
-
-	public IEnumerable<HashSet<string>> Proximity() => _proximity;
+	#endregion
 }

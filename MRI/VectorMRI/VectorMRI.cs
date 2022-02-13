@@ -13,8 +13,8 @@ public class VectorMri : MRI {
 
 	public override IEnumerable<(string document, double score)> Query(Query query) {
 		_queryTfxIdf = new QueryTfxIdf(query, Corpus);
-		return Corpus.Documents().Where(document => query.Inclusions().All(word => Corpus[document, word] != 0) &&
-		                                            query.Exclusions().All(word => Corpus[document, word] == 0))
+		return Corpus.Documents().Where(document => query.Inclusions.All(word => Corpus[document, word] != 0) &&
+		                                            query.Exclusions.All(word => Corpus[document, word] == 0))
 			.Select(document => (document, score: Similarity(document))).ToList().OrderByDescending(t => t.score);
 	}
 

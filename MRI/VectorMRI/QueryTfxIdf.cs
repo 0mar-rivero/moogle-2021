@@ -37,7 +37,7 @@ internal class QueryTfxIdf {
 
 	private double CalculateIdf(string word) => Math.Log10((double)_corpus.DocsCount / _corpus[word]);
 
-	private int Freq(string word) => _query[word];
+	private double Freq(string word) => _query[word];
 
 	#endregion
 }
