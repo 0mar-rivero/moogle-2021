@@ -2,12 +2,12 @@
 
 namespace MRI.VectorMRI;
 
-public static class Tools {
-	internal static float Norm(this IEnumerable<float> vector) =>
-		(float)Math.Sqrt(vector.Select(t => Math.Pow(t, 2)).Sum());
+internal static class ProximityTools {
+	internal static double Norm(this IEnumerable<double> vector) =>
+		Math.Sqrt(vector.Select(t => Math.Pow(t, 2)).Sum());
 
-	internal static float InverseProximity(this Corpus.Corpus corpus, Query query, string document) => 1 /
-		(float)query.Proximity()
+	internal static double InverseProximity(this Corpus.Corpus corpus, Query query, string document) => 1 /
+		(double)query.Proximity()
 			.Select(proximitySet => corpus.Proximity(document, proximitySet, proximitySet.Count, PowGenerator(5, 13)))
 			.Select(a => (int)Math.Log(a, 5)).Aggregate(1, (current, a) => current * a);
 

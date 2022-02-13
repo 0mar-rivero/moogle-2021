@@ -1,4 +1,5 @@
-﻿using Corpus;
+﻿using System.Xml;
+using Corpus;
 using MRI;
 using MRI.VectorMRI;
 
@@ -9,11 +10,12 @@ public static class Moogle {
 	public static SearchResult Query(string query) {
 		var b = _mri.Query(new Query(query));
 		var items = new List<SearchItem>();
-		foreach (var (doc, ranking) in b.Take(10).Where(t=>t.Item2 is not (0 or float.NaN))) {
+		foreach (var (doc, ranking) in b.Take(10).Where(t=>t.Item2 is not (0 or double.NaN))) {
 			items.Add(new SearchItem(new FileInfo(doc).Name ,"not implemented", ranking));
 			Console.WriteLine(ranking);
 		}
 
+		Console.WriteLine();
 		return new SearchResult(items.ToArray(), query);
 	}
 }

@@ -18,6 +18,8 @@ public abstract class Corpus {
 
 	public abstract IEnumerable<string> Words();
 	public abstract IEnumerable<string> Documents();
-	
+
+	public abstract IEnumerable<string> Documents(string word);
+
 	public abstract int Proximity(string document, IEnumerable<string> words, int minAmount, IEnumerable<int>? gaps = null);
 }

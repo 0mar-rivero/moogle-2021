@@ -2,7 +2,7 @@ namespace MoogleEngine;
 
 public class SearchItem
 {
-    public SearchItem(string title, string snippet, float score)
+    public SearchItem(string title, string snippet, double score)
     {
         this.Title = title;
         this.Snippet = snippet;
@@ -13,5 +13,5 @@ public class SearchItem
 
     public string Snippet { get; private set; }
 
-    public float Score { get; private set; }
+    public double Score { get; private set; }
 }
