@@ -8,8 +8,9 @@ internal static class ProximityTools {
 
 	internal static double InverseProximity(this Corpus.Corpus corpus, Query query, string document) => 1 /
 		(double)query.Proximity
-			.Select(proximitySet => corpus.Proximity(document, proximitySet, proximitySet.Count, PowGenerator(5, 13)))
-			.Select(a => (int)Math.Log(a, 5)).Aggregate(1, (current, a) => current * a);
+			.Select(proximitySet => corpus.Proximity(document, proximitySet, proximitySet.Count, PowGenerator(2, 30)))
+			.Select(a => (int)Math.Log(a, 2)).Aggregate(1, (current, a) => current * a);
+			
 
 	private static IEnumerable<int> PowGenerator(int @base, int max) =>
 		Enumerable.Range(0, max).Select(t => (int)Math.Pow(@base, t));

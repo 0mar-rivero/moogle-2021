@@ -27,6 +27,7 @@ public class TestCorpus : Corpus {
 			File.WriteAllText(VocabularyPath, JsonSerializer.Serialize(_vocabulary));
 			File.WriteAllText(MostRepeatedPath, JsonSerializer.Serialize(_mostRepeatedWordOccurrences));
 		}
+
 		WordsCount = _vocabulary.Count;
 		DocsCount = Directory.GetFiles(_path).Length;
 	}
@@ -71,14 +72,14 @@ public class TestCorpus : Corpus {
 	/// Procesa el corpus.
 	/// </summary>
 	protected sealed override void ProcessCorpus() {
-		foreach (var document in Documents()) {
+		foreach (var document in Documents) {
 			var words = File.ReadAllText(document).ToLower().Split().TrimPunctuation();
 			foreach (var (index, word) in words.Enumerate().Where(t => t.elem.Length > 1))
 				this[document, word, true]?.Add(index);
 
 			foreach (var word in _vocabulary.Keys) this[document, word, false]?.TrimExcess();
 
-			_mostRepeatedWordOccurrences.Add(document, Words().Select(word => this[document, word]).Max());
+			_mostRepeatedWordOccurrences.Add(document, Words.Select(word => this[document, word]).Max());
 		}
 	}
 
@@ -93,17 +94,17 @@ public class TestCorpus : Corpus {
 	/// Devuelve una colección de las palabras del corpus.
 	/// </summary>
 	/// <returns>Colección de las palabras del corpus.</returns>
-	public override IEnumerable<string> Words() => _vocabulary.Keys;
+	public override IEnumerable<string> Words => _vocabulary.Keys;
 
 	/// <summary>
 	/// Devuelve una colección de los documentos del corpus.
 	/// </summary>
 	/// <returns>Colección con las direcciones de los documentos del corpus.</returns>
-	public override IEnumerable<string> Documents() {
-		return Directory.GetFiles(_path).Where(t => t.EndsWith(".txt"));
-	}
+	public override IEnumerable<string> Documents => Directory.GetFiles(_path).Where(t => t.EndsWith(".txt"));
 
-	public override IEnumerable<string> Documents(string word) => _vocabulary.ContainsKey(word) ? _vocabulary[word].Keys : Enumerable.Empty<string>();
+
+	public override IEnumerable<string> GetDocuments(string word) =>
+		_vocabulary.ContainsKey(word) ? _vocabulary[word].Keys : Enumerable.Empty<string>();
 
 	/// <summary>
 	/// Devuelve cual es el menor de los gaps que contiene a todas las palabras del array word en un documento.

@@ -15,7 +15,7 @@ internal class QueryTfxIdf {
 		Norm = Math.Sqrt(_weightsDictionary.Values.Select(weight => Math.Pow(weight, 2)).Sum());
 	}
 
-	private Dictionary<string, double> ProcessQuery() => _corpus.Words().ToDictionary(word => word, CalculateWq);
+	private Dictionary<string, double> ProcessQuery() => _corpus.Words.ToDictionary(word => word, CalculateWq);
 
 	internal double this[string word] => _weightsDictionary.ContainsKey(word) ? _weightsDictionary[word] : 0;
 
@@ -33,7 +33,7 @@ internal class QueryTfxIdf {
 	/// </summary>
 	/// <param name="word">Palabra</param>
 	/// <returns>Frecuencia normalizada</returns>
-	private double CalculateTf(string word) => (double)Freq(word) / _query.MostRepeatedOccurrences;
+	private double CalculateTf(string word) => Freq(word) / _query.MostRepeatedOccurrences;
 
 	private double CalculateIdf(string word) => Math.Log10((double)_corpus.DocsCount / _corpus[word]);
 

@@ -16,10 +16,10 @@ public abstract class Corpus {
 
 	public abstract int MostRepeatedWordOccurrences(string document);
 
-	public abstract IEnumerable<string> Words();
-	public abstract IEnumerable<string> Documents();
+	public abstract IEnumerable<string> Words { get; }
+	public abstract IEnumerable<string> Documents { get; }
 
-	public abstract IEnumerable<string> Documents(string word);
+	public abstract IEnumerable<string> GetDocuments(string word);
 
 	public abstract int Proximity(string document, IEnumerable<string> words, int minAmount, IEnumerable<int>? gaps = null);
 }

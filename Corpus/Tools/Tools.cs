@@ -1,7 +1,4 @@
-﻿using System.ComponentModel;
-using System.Diagnostics.Tracing;
-using System.Runtime.Serialization;
-using System.Text.Json;
+﻿using System.Text;
 
 namespace Corpus.Tools;
 
@@ -117,6 +114,12 @@ public static class Tools {
 
 	#region Levenshtein
 
+	public static double LevenshteinFactor(string word1, string word2) {
+		if (word1 == word2) return 1;
+		var levenshteinDistance = LevenshteinDistance(word1, word2, word1.Length * 1d / 3);
+		return levenshteinDistance is not double.NaN ? 1 - levenshteinDistance / word1.Length : 0;
+	}
+
 	private static double LevenshteinDistance(string word1, string word2, double max) {
 		var matrix = new double[word2.Length + 1, word1.Length + 1];
 		var mask = new bool[matrix.GetLength(0), matrix.GetLength(1)];
@@ -128,45 +131,28 @@ public static class Tools {
 			mask[0, col] = true;
 		}
 
-		for (var row = 1; row < matrix.GetLength(1); row++) {
+		for (var row = 1; row < matrix.GetLength(0); row++) {
 			var toPut = matrix[row - 1, 0] + InCost(word2[row - 1]);
 			if (toPut > max) break;
 			matrix[row, 0] = toPut;
 			mask[row, 0] = true;
 		}
 
-		Put(matrix, mask, word1, word2, 1, 1, max);
-		Expand(matrix, mask, word1, word2, 0, 1, 1, max);
-
-		return mask[word2.Length, word1.Length] ? matrix[word2.Length, word1.Length] : double.MaxValue;
-	}
-
-	private static void Expand(double[,] matrix, bool[,] mask, string word1, string word2, int dir, int row, int col,
-		double maxDistance) {
-		while (true) {
-			if (dir <= 0 && row < matrix.GetLength(0) - 1) {
-				Put(matrix, mask, word1, word2, row + 1, col, maxDistance);
-				Expand(matrix, mask, word1, word2, -1, row + 1, col, maxDistance);
+		var possible = true;
+		for (var i = 1; i < Math.Min(matrix.GetLength(0), matrix.GetLength(1)) && possible; i++) {
+			for (var j = i; j < matrix.GetLength(1); j++) {
+				if (Put(matrix, mask, word1, word2, i, j, max)) possible = true;
 			}
 
-			if (dir >= 0 && col < matrix.GetLength(1) - 1) {
-				Put(matrix, mask, word1, word2, row, col + 1, maxDistance);
-				Expand(matrix, mask, word1, word2, 1, row, col + 1, maxDistance);
+			for (var j = i + 1; j < matrix.GetLength(0); j++) {
+				if (Put(matrix, mask, word1, word2, j, i, max)) possible = true;
 			}
-
-			if (dir == 0 && row < matrix.GetLength(0) - 1 && col < matrix.GetLength(1) - 1) {
-				Put(matrix, mask, word1, word2, row + 1, col + 1, maxDistance);
-				dir = 0;
-				row += 1;
-				col += 1;
-				continue;
-			}
-
-			break;
 		}
+
+		return mask[word2.Length, word1.Length] ? matrix[word2.Length, word1.Length] : double.NaN;
 	}
 
-	private static void Put(double[,] matrix, bool[,] mask, string word1, string word2, int row, int col,
+	private static bool Put(double[,] matrix, bool[,] mask, string word1, string word2, int row, int col,
 		double max) {
 		var replacing = mask[row - 1, col - 1]
 			? matrix[row - 1, col - 1] + SusCost(word1[col - 1], word2[row - 1])
@@ -174,18 +160,35 @@ public static class Tools {
 		var deleting = mask[row, col - 1] ? matrix[row, col - 1] + InCost(word1[col - 1]) : double.MaxValue;
 		var inserting = mask[row - 1, col] ? matrix[row - 1, col] + InCost(word2[row - 1]) : double.MaxValue;
 		var min = Math.Min(replacing, Math.Min(deleting, inserting));
-		if (min > max) return;
+		if (min > max) return false;
 		matrix[row, col] = min;
 		mask[row, col] = true;
+		return true;
 	}
 
-	private static double InCost(char character) {
+	private static double InCost(char character) =>
+		character switch {
+			'h' => 0.5,
+			_ => 1
+		};
+
+	private static double SusCost(char character1, char character2) {
+		if (character1 == character2) return 0;
+		character1 = character1.ToString().Normalize(NormalizationForm.FormD)[0];
+		character2 = character2.ToString().Normalize(NormalizationForm.FormD)[0];
+		if (character1 == character2) return 0.25;
+		if (Set05.Contains((character1, character2)) || Set05.Contains((character2, character1))) return 0.5;
+		if (Set075.Contains((character1, character2)) || Set075.Contains((character2, character1))) return 0.75;
 		return 1;
 	}
 
-	private static double SusCost(char character1, char character2) {
-		return character1 == character2 ? 0 : 1;
-	}
+	private static readonly HashSet<(char, char)> Set05 = new()
+		{ ('b', 'v'), ('c', 'k'), ('c', 's'), ('c', 'z'), ('c', 'q'), ('g', 'j'), ('k', 'q'), ('s', 'z') };
+
+	private static readonly HashSet<(char, char)> Set075 = new() {
+		('i', 'y'), ('r', 'l'), ('m', 'n'), ('a', 'e'), ('a', 'i'), ('a', 'o'), ('a', 'u'), ('e', 'i'), ('e', 'o'),
+		('e', 'u'), ('i', 'o'), ('i', 'u'), ('o', 'u')
+	};
 
 	#endregion
 }

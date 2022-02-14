@@ -9,24 +9,34 @@ namespace Corpus;
 
 public class Query {
 	private readonly Dictionary<string, double> _text;
+	private readonly Dictionary<string, double> _expandedText;
+	private readonly Corpus _corpus;
 	public readonly HashSet<string> Exclusions;
 	public readonly HashSet<string> Inclusions;
 	public readonly HashSet<HashSet<string>> Proximity;
 	public readonly double MostRepeatedOccurrences;
 
 	public Query(string text, Corpus corpus) {
+		_corpus = corpus;
 		var rawText = text.ToLower().Split().ToList();
 		Exclusions = new HashSet<string>();
 		Inclusions = new HashSet<string>();
 		Proximity = new HashSet<HashSet<string>>();
 		_text = ProcessQuery(rawText);
-		MostRepeatedOccurrences = _text.Values.Max();
+		_expandedText = new Dictionary<string, double>();
+		LevenshteinProcess();
+		MostRepeatedOccurrences = _expandedText.Values.Max();
 	}
 
-	public double this[string word] => _text.ContainsKey(word) ? _text[word] : 0;
-	public IEnumerable<string> Words() => _text.Keys;
+	public double this[string word] {
+		get => _expandedText.ContainsKey(word) ? _expandedText[word] : 0;
+		private set => _expandedText[word] = value;
+	}
+
+	public IEnumerable<string> Words => _text.Keys;
 
 	#region RawTextProcessing
+
 	private Dictionary<string, double> ProcessQuery(List<string> rawText) {
 		ProcessBinProximity(rawText);
 		ProcessNonBinProximity(rawText);
@@ -35,9 +45,14 @@ public class Query {
 			if (ToExclude(word)) Exclusions.Add(word.TrimPunctuation());
 			if (ToInclude(word)) Inclusions.Add(word.TrimPunctuation());
 		}
+		
+		var dic = new Dictionary<string, double>();
+		foreach (var word in rawText.Select(Tools.Tools.TrimPunctuation).Where(word => !Exclusions.Contains(word) && word.Length > 1)) {
+			if (!dic.ContainsKey(word)) dic[word] = 0;
+			dic[word]++;
+		}
 
-		return rawText.Select(Tools.Tools.TrimPunctuation).Where(word => !Exclusions.Contains(word) && word.Length > 1)
-			.ToDictionary(word => word, word => (double)rawText.Count(i => i == word));
+		return dic;
 	}
 
 	private void ProcessBinProximity(IReadOnlyList<string> rawText) {
@@ -86,6 +101,23 @@ public class Query {
 
 	private static bool ToExclude(string word) => word.StartsWith('!');
 	private static bool ToInclude(string word) => word.StartsWith('^');
+
+	#endregion
+
+	#region Turbio
+
+	private void LevenshteinProcess() {
+		foreach (var word1 in Words) {
+			if (word1.Length <= 2 && _corpus.Words.Contains(word1)) {
+				this[word1] = _text[word1];
+				continue;
+			}
+
+			foreach (var word2 in _corpus.Words) {
+				this[word2] += _text[word1] * LevenshteinFactor(word1, word2);
+			}
+		}
+	}
 
 	#endregion
 }

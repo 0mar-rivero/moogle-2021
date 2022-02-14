@@ -26,9 +26,9 @@ public class TfxIdf {
 
 	private Dictionary<string, Dictionary<string, double>> ProcessTFxIdf() {
 		var tfxIdf = new Dictionary<string, Dictionary<string, double>>();
-		foreach (var word in _corpus.Words()) {
+		foreach (var word in _corpus.Words) {
 			if (!tfxIdf.ContainsKey(word)) tfxIdf.Add(word, new Dictionary<string, double>());
-			foreach (var document in _corpus.Documents(word)) {
+			foreach (var document in _corpus.GetDocuments(word)) {
 				if (_corpus[document, word] != 0) {
 					tfxIdf[word].Add(document, CalculateW(word, document));
 				}
@@ -39,7 +39,7 @@ public class TfxIdf {
 	}
 
 	private Dictionary<string, double> ProcessNorms() {
-		var dic = _corpus.Documents().ToDictionary(document => document, _ => 0d);
+		var dic = _corpus.Documents.ToDictionary(document => document, _ => 0d);
 		if (_weightsDictionary != null)
 			foreach (var (_, documents) in _weightsDictionary) {
 				foreach (var (document, score) in documents) {
