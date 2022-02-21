@@ -1,13 +1,9 @@
-﻿using System.Collections;
-using System.Diagnostics;
-using System.Security.AccessControl;
-using System.Security.Cryptography;
-using Corpus.Tools;
-using static Corpus.Tools.Tools;
+﻿using Corpus.Tools;
 
 namespace Corpus;
 
 public class Query {
+	private const double HalfGoldenRatio = 0.8090169943749474;
 	private readonly Dictionary<string, double> _text;
 	private readonly Dictionary<string, double> _expandedText;
 	private readonly Corpus _corpus;
@@ -24,7 +20,7 @@ public class Query {
 		Proximity = new HashSet<HashSet<string>>();
 		_text = ProcessQuery(rawText);
 		_expandedText = new Dictionary<string, double>();
-		LevenshteinProcess();
+		StrongQueryProcess();
 		MostRepeatedOccurrences = _expandedText.Values.Max();
 	}
 
@@ -45,9 +41,10 @@ public class Query {
 			if (ToExclude(word)) Exclusions.Add(word.TrimPunctuation());
 			if (ToInclude(word)) Inclusions.Add(word.TrimPunctuation());
 		}
-		
+
 		var dic = new Dictionary<string, double>();
-		foreach (var word in rawText.Select(Tools.Tools.TrimPunctuation).Where(word => !Exclusions.Contains(word) && word.Length > 1)) {
+		foreach (var word in rawText.Select(Tools.Tools.TrimPunctuation)
+			         .Where(word => !Exclusions.Contains(word) && word.Length > 1)) {
 			if (!dic.ContainsKey(word)) dic[word] = 0;
 			dic[word]++;
 		}
@@ -106,15 +103,22 @@ public class Query {
 
 	#region Turbio
 
-	private void LevenshteinProcess() {
-		foreach (var word1 in Words) {
-			if (word1.Length <= 2 && _corpus.Words.Contains(word1)) {
-				this[word1] = _text[word1];
-				continue;
-			}
+	private void StrongQueryProcess() {
+		foreach (var queryWord in Words) {
+			foreach (var corpusWord in _corpus.Words) {
+				if (queryWord == corpusWord) {
+					this[corpusWord] += _text[corpusWord];
+					continue;
+				}
+				
+				if (queryWord.Stem() == corpusWord.Stem()) {
+					Console.WriteLine(queryWord + ":" + corpusWord);
+					this[corpusWord] += _text[queryWord] * HalfGoldenRatio;
+					continue;
+				}
 
-			foreach (var word2 in _corpus.Words) {
-				this[word2] += _text[word1] * LevenshteinFactor(word1, word2);
+				if (queryWord.Length <= 2) continue;
+				this[corpusWord] += _text[queryWord] * Levenshtein.LevenshteinFactor(queryWord, corpusWord);
 			}
 		}
 	}
