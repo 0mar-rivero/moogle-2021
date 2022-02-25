@@ -6,6 +6,7 @@ namespace Corpus;
 public abstract class Corpus {
 	public int WordsCount;
 	public int DocsCount;
+	internal Dictionary<string, string> StemmerDictionary;
 
 	protected Corpus() {
 	}
@@ -21,5 +22,5 @@ public abstract class Corpus {
 
 	public abstract IEnumerable<string> GetDocuments(string word);
 
-	public abstract int Proximity(string document, IEnumerable<string> words, int minAmount, IEnumerable<int>? gaps = null);
+	public abstract int Proximity(string document, IEnumerable<string> words);
 }

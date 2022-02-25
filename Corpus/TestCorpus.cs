@@ -29,7 +29,8 @@ public class TestCorpus : Corpus {
 		}
 
 		WordsCount = _vocabulary.Count;
-		DocsCount = Directory.GetFiles(_path).Length;
+		DocsCount = Documents.Count();
+		StemmerDictionary = LoadStemmerDictionary("../Cache/StemmerDictionary.json");
 	}
 
 	/// <summary>
@@ -100,7 +101,7 @@ public class TestCorpus : Corpus {
 	/// Devuelve una colección de los documentos del corpus.
 	/// </summary>
 	/// <returns>Colección con las direcciones de los documentos del corpus.</returns>
-	public override IEnumerable<string> Documents => Directory.GetFiles(_path).Where(t => t.EndsWith(".txt"));
+	public sealed override IEnumerable<string> Documents => Directory.GetFiles(_path).Where(t => t.EndsWith(".txt"));
 
 
 	public override IEnumerable<string> GetDocuments(string word) =>
@@ -114,13 +115,22 @@ public class TestCorpus : Corpus {
 	/// <param name="minAmount">Cantidad mínima de palabras que tienen que estar contenidas en el gap.</param>
 	/// <param name="gaps">Longitudes relevantes para los gaps.</param>
 	/// <returns>Un entero con la longitud del menor de los gaps que los contiene a minAmount words.</returns>
-	public override int Proximity(string document, IEnumerable<string> words, int minAmount,
-		IEnumerable<int>? gaps = null) {
+	public override int Proximity(string document, IEnumerable<string> words) {
 		var indexDictionary = LoadIndexes(document, words);
-		return indexDictionary.Count < minAmount ? int.MaxValue : Tools.Tools.Proximity(indexDictionary, gaps, minAmount);
+		return Tools.Tools.Proximity(indexDictionary);
 	}
 
 	private Dictionary<string, List<int>> LoadIndexes(string document, IEnumerable<string> words) =>
-		words.Where(word => this[document, word, false] is not null)
-			.ToDictionary(word => word, word => this[document, word, false]!);
+		words.ToDictionary(word => word,
+			word => this[document, word, false] is null ? new List<int>() : this[document, word, false]!);
+	
+	private Dictionary<string, string> LoadStemmerDictionary(string path) {
+		try {
+			return JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(path)) ??
+			       new Dictionary<string, string>();
+		}
+		catch {
+			return new Dictionary<string, string>();
+		}
+	}
 }

@@ -9,4 +9,6 @@ public abstract class MRI {
 		Corpus = corpus;
 	}
 	public abstract IEnumerable<(string document, double score)> Query(Query query);
+
+	public abstract string Suggestion(Query query);
 }

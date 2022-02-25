@@ -1,4 +1,5 @@
-﻿using System.Text.Json;
+﻿using System.Text;
+using System.Text.Json;
 
 namespace MRI.VectorMRI;
 
@@ -27,10 +28,10 @@ public class TfxIdf {
 	private Dictionary<string, Dictionary<string, double>> ProcessTFxIdf() {
 		var tfxIdf = new Dictionary<string, Dictionary<string, double>>();
 		foreach (var word in _corpus.Words) {
-			if (!tfxIdf.ContainsKey(word)) tfxIdf.Add(word, new Dictionary<string, double>());
+			if (!tfxIdf.ContainsKey(word)) tfxIdf[word] = new Dictionary<string, double>();
 			foreach (var document in _corpus.GetDocuments(word)) {
 				if (_corpus[document, word] != 0) {
-					tfxIdf[word].Add(document, CalculateW(word, document));
+					tfxIdf[word][document] = CalculateW(word, document);
 				}
 			}
 		}

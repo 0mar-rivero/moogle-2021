@@ -1,8 +1,8 @@
-﻿using System.Text;
-
-namespace Corpus.Tools;
+﻿namespace Corpus.Tools;
 
 public static class Tools {
+	private const double ThirdOfE = Math.E / 3;
+	private const double TenthOfPi = Math.PI / 10;
 	public static IEnumerable<(int index, T elem)> Enumerate<T>(this IEnumerable<T> collection) {
 		var index = 0;
 		foreach (var elem in collection)
@@ -16,7 +16,7 @@ public static class Tools {
 	/// </summary>
 	/// <param name="indexDictionary">Diccionario de (palabra, lista)</param>
 	/// <returns>Lista de tuplas ordenadas de la forma(word, index). Siendo word la palabra de ese índice.</returns>
-	public static List<(string word, int index)> SortedMerge(this Dictionary<string, List<int>> indexDictionary) {
+	private static List<(string word, int index)> SortedMerge(this Dictionary<string, List<int>> indexDictionary) {
 		var merged = new List<(string word, int index)>();
 		var indexes = indexDictionary.Keys.ToDictionary(word => word, _ => 0);
 
@@ -38,43 +38,41 @@ public static class Tools {
 		return merged;
 	}
 
-	public static int Proximity(Dictionary<string, List<int>> indexDictionary, IEnumerable<int>? gaps, int minAmount) {
-		var mask = indexDictionary.Keys.ToDictionary(word => word, _ => false);
+	public static int Proximity(Dictionary<string, List<int>> indexDictionary) {
 		var indexes = indexDictionary.SortedMerge();
 		indexes.TrimExcess();
-		gaps ??= Enumerable.Range(0, indexes.Last().index);
-		var end = indexes.Last().index;
-		var minGap = int.MaxValue - end;
-		var bestLength = int.MaxValue;
-		var count = 0;
-		for (var left = indexes.Count - minAmount + 1; left >= 0; left--) {
-			for (var right = left;
-			     right < indexes.Count && indexes[left].index + minGap > indexes[right].index;
-			     right++) {
-				var (word, index) = indexes[right];
-				if (!mask[word]) count++;
-				mask[word] = true;
-				if (count != minAmount) continue;
-				bestLength = index - indexes[left].index;
-				foreach (var gap in gaps) {
-					if (gap < bestLength) {
-						minGap = gap;
-						continue;
-					}
+		var count = indexDictionary.ToDictionary(t => t.Key, _ => 0);
+		var left = 0;
+		var right = -1;
+		var tCount = 0;
+		var min = int.MaxValue;
+		var canMove = true;
 
-					bestLength = gap;
-					break;
-				}
-
-				break;
+		while (canMove) {
+			canMove = false;
+			while (tCount < count.Count && right < indexes.Count - 1) {
+				canMove = true;
+				right++;
+				count[indexes[right].word]++;
+				if (count[indexes[right].word] == 1) tCount++;
 			}
 
-			foreach (var wordKey in mask.Keys) mask[wordKey] = false;
-			count = 0;
+			while (tCount == count.Count && left < right) {
+				canMove = true;
+				count[indexes[left].word]--;
+				if (count[indexes[left].word] == 0) tCount--;
+				min = Math.Min(indexes[right].index - indexes[left].index, min);
+				left++;
+			}
 		}
 
-		return bestLength;
+		return min;
 	}
+
+	public static double InverseProximity(this Corpus corpus, Query query, string document) =>
+		1 / (double)query.Proximity
+			.Select(proximitySet => corpus.Proximity(document, proximitySet))
+			.Select(a => (int)Math.Log(a, 5) + 1).Aggregate(1, (current, a) => current * a);
 
 	#endregion
 
@@ -109,6 +107,19 @@ public static class Tools {
 	/// <param name="words">Colección de palabras sobre la cual aplicar TrimPunctuation.</param>
 	/// <returns>Colección de palabras tras aplicar TrimPunctuation sobre ellas.</returns>
 	public static IEnumerable<string> TrimPunctuation(this IEnumerable<string> words) => words.Select(TrimPunctuation);
+
+	#endregion
+	
+	#region WordProximity
+
+	public static double WordProximity(string word1, string word2, Dictionary<string, string> stemmer) {
+		if (word1 == word2) return 1;
+		if (word1.Stem(stemmer) == word2.Stem(stemmer)) return ThirdOfE;
+		var levenshteinFactor = Levenshtein.LevenshteinFactor(word1, word2);
+		if (levenshteinFactor > TenthOfPi) return levenshteinFactor;
+		if (Synonymous.Syn(word1,word2)) return TenthOfPi;
+		return 0;
+	}
 
 	#endregion
 }

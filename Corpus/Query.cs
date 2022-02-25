@@ -1,16 +1,22 @@
-﻿using Corpus.Tools;
+﻿using System.Diagnostics;
+using System.Text;
+using System.Text.Json;
+using Corpus.Tools;
 
 namespace Corpus;
 
 public class Query {
-	private const double HalfGoldenRatio = 0.8090169943749474;
+	private const double ThirdOfE = Math.E / 3;
+	private const double TenthOfPi = Math.PI / 10;
 	private readonly Dictionary<string, double> _text;
 	private readonly Dictionary<string, double> _expandedText;
+	public readonly Dictionary<string, Dictionary<string, double>> SuggestionDictionary = new();
 	private readonly Corpus _corpus;
 	public readonly HashSet<string> Exclusions;
 	public readonly HashSet<string> Inclusions;
 	public readonly HashSet<HashSet<string>> Proximity;
 	public readonly double MostRepeatedOccurrences;
+
 
 	public Query(string text, Corpus corpus) {
 		_corpus = corpus;
@@ -21,15 +27,18 @@ public class Query {
 		_text = ProcessQuery(rawText);
 		_expandedText = new Dictionary<string, double>();
 		StrongQueryProcess();
-		MostRepeatedOccurrences = _expandedText.Values.Max();
+		MostRepeatedOccurrences = _expandedText.Count > 0 ? _expandedText.Values.Max() : 0;
 	}
 
 	public double this[string word] {
 		get => _expandedText.ContainsKey(word) ? _expandedText[word] : 0;
-		private set => _expandedText[word] = value;
+		private set {
+			if (value > double.Epsilon) _expandedText[word] = value;
+		}
 	}
 
 	public IEnumerable<string> Words => _text.Keys;
+
 
 	#region RawTextProcessing
 
@@ -105,22 +114,16 @@ public class Query {
 
 	private void StrongQueryProcess() {
 		foreach (var queryWord in Words) {
+			SuggestionDictionary[queryWord] = new Dictionary<string, double>();
 			foreach (var corpusWord in _corpus.Words) {
-				if (queryWord == corpusWord) {
-					this[corpusWord] += _text[corpusWord];
-					continue;
-				}
-				
-				if (queryWord.Stem() == corpusWord.Stem()) {
-					Console.WriteLine(queryWord + ":" + corpusWord);
-					this[corpusWord] += _text[queryWord] * HalfGoldenRatio;
-					continue;
-				}
-
-				if (queryWord.Length <= 2) continue;
-				this[corpusWord] += _text[queryWord] * Levenshtein.LevenshteinFactor(queryWord, corpusWord);
+				var proximity = Tools.Tools.WordProximity(queryWord, corpusWord, _corpus.StemmerDictionary);
+				if (proximity is 0) continue;
+				SuggestionDictionary[queryWord][corpusWord] = proximity is 1? 1 : proximity;
+				this[corpusWord] += _text[queryWord] * proximity;
 			}
 		}
+		
+		File.WriteAllText("../Cache/StemmerDictionary.json", JsonSerializer.Serialize(_corpus.StemmerDictionary));
 	}
 
 	#endregion

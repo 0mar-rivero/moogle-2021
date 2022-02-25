@@ -4,12 +4,14 @@ using SuffixDic = System.Collections.Generic.Dictionary<int, System.Collections.
 namespace Corpus.Tools;
 
 public static class Stemmer {
-	public static string Stem(this string word) {
+	public static string Stem(this string word, Dictionary<string, string> stemmerDictionary) {
+		if (stemmerDictionary.ContainsKey(word)) return stemmerDictionary[word];
 		var r1 = R1(word);
 		var r2 = R2(word, r1);
 		var rV = Rv(word);
-		return word.DeletePronoun(rV).VerbSuffixDeleting(rV).NonVerbSuffixDeleting(r1, r2).ResidualDeleting(rV)
+		stemmerDictionary[word] = word.DeletePronoun(rV).VerbSuffixDeleting(rV).NonVerbSuffixDeleting(r1, r2).ResidualDeleting(rV)
 			.AcuteAccentsDeleting();
+		return stemmerDictionary[word];
 	}
 
 	private static readonly HashSet<char> VowelList = new() { 'a', 'e', 'i', 'o', 'u', 'á', 'é', 'í', 'ó', 'ú', 'ü' };

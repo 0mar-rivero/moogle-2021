@@ -10,14 +10,15 @@ public static class Moogle {
 	private static readonly Corpus.Corpus Corpus = new TestCorpus("../Content/");
 	private static readonly VectorMri Mri = new(Corpus);
 	public static SearchResult Query(string query) {
-		var b = Mri.Query(new Query(query, Corpus));
+		var _query = new Query(query, Corpus);
+		var b = Mri.Query(_query);
 		var items = new List<SearchItem>();
 		foreach (var (doc, ranking) in b.Take(10).Where(t=>t.Item2 is not (0 or double.NaN))) {
-			items.Add(new SearchItem(new FileInfo(doc).Name ,"not implemented", ranking));
+			items.Add(new SearchItem(new FileInfo(doc).Name ,"not implemented :(", ranking));
 			Console.WriteLine(ranking);
 		}
 
 		Console.WriteLine();
-		return new SearchResult(items.ToArray(), query);
+		return new SearchResult(items.ToArray(), Mri.Suggestion(_query));
 	}
 }

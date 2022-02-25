@@ -4,8 +4,9 @@ namespace Corpus.Tools;
 
 public class Levenshtein {
 	public static double LevenshteinFactor(string word1, string word2) {
-		if (word1 == word2) return 1;
-		var levenshteinDistance = LevenshteinDistance(word1, word2, word1.Length * 1d / 3);
+		if (word1.Length * 4d / 3 + .5 < word2.Length || word1.Length * 2d / 3 - .5 > word2.Length) return 0;
+		if (!Levenshteable(word1, word2)) return 0;
+		var levenshteinDistance = LevenshteinDistance(word1, word2, word1.Length / 3d);
 		return levenshteinDistance is not double.NaN ? 1 - levenshteinDistance / word1.Length : 0;
 	}
 
@@ -69,6 +70,12 @@ public class Levenshtein {
 		if (Set05.Contains((character1, character2)) || Set05.Contains((character2, character1))) return 0.5;
 		if (Set075.Contains((character1, character2)) || Set075.Contains((character2, character1))) return 0.75;
 		return 1;
+	}
+
+	private static bool Levenshteable(string word1, string word2) {
+		var a = (word1[0] is 'h' ? word1[1] : word1[0]).ToString().Normalize(NormalizationForm.FormD)[0];
+		var b = (word2[0] is 'h' ? word2[1] : word2[0]).ToString().Normalize(NormalizationForm.FormD)[0];
+		return SusCost(a, b) <= 0.5;
 	}
 
 	private static readonly HashSet<(char, char)> Set05 = new()
