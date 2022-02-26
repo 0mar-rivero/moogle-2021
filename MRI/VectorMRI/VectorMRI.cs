@@ -34,7 +34,7 @@ public class VectorMri : MRI {
 			outPut += bestWord;
 		}
 
-		return outPut;
+		return outPut.Trim();
 	}
 
 	private double WordRelevance(string word) => Corpus.GetDocuments(word).Sum(document => _tfxIdf[document, word]);

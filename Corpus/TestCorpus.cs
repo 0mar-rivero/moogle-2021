@@ -1,4 +1,6 @@
-﻿using System.Text.Json;
+﻿using System.Collections;
+using System.Net;
+using System.Text.Json;
 using Corpus.Tools;
 
 namespace Corpus;
@@ -12,6 +14,7 @@ public class TestCorpus : Corpus {
 
 	public TestCorpus(string path) {
 		_path = path;
+		DocsCount = Documents.Count();
 		try {
 			_vocabulary =
 				JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, List<int>>>>(
@@ -29,7 +32,6 @@ public class TestCorpus : Corpus {
 		}
 
 		WordsCount = _vocabulary.Count;
-		DocsCount = Documents.Count();
 		StemmerDictionary = LoadStemmerDictionary("../Cache/StemmerDictionary.json");
 	}
 
@@ -75,12 +77,19 @@ public class TestCorpus : Corpus {
 	protected sealed override void ProcessCorpus() {
 		foreach (var document in Documents) {
 			var words = File.ReadAllText(document).ToLower().Split().TrimPunctuation();
-			foreach (var (index, word) in words.Enumerate().Where(t => t.elem.Length > 1))
+			foreach (var (index, word) in words.Enumerate())
 				this[document, word, true]?.Add(index);
 
 			foreach (var word in _vocabulary.Keys) this[document, word, false]?.TrimExcess();
+		}
 
-			_mostRepeatedWordOccurrences.Add(document, Words.Select(word => this[document, word]).Max());
+		foreach (var word in Words.Where(word => word.Length != 1 && _vocabulary[word].Count / (double)DocsCount > 0.9)) {
+			StopWords.Add(word);
+		}
+
+		foreach (var document in Documents) {
+			_mostRepeatedWordOccurrences.Add(document,
+				Words.Where(word => word.Length > 1 && !StopWords.Contains(word)).Select(word => this[document, word]).Max());
 		}
 	}
 
@@ -120,10 +129,13 @@ public class TestCorpus : Corpus {
 		return Tools.Tools.Proximity(indexDictionary);
 	}
 
+	public override string Snippet(string document, Query query) => 
+		Tools.Tools.Snippet(document, this, query, 50);
+
 	private Dictionary<string, List<int>> LoadIndexes(string document, IEnumerable<string> words) =>
 		words.ToDictionary(word => word,
 			word => this[document, word, false] is null ? new List<int>() : this[document, word, false]!);
-	
+
 	private Dictionary<string, string> LoadStemmerDictionary(string path) {
 		try {
 			return JsonSerializer.Deserialize<Dictionary<string, string>>(File.ReadAllText(path)) ??

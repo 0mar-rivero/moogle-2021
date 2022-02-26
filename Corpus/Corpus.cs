@@ -1,4 +1,5 @@
-﻿using System.Diagnostics;
+﻿using System.Collections;
+using System.Diagnostics;
 using System.Diagnostics.Tracing;
 
 namespace Corpus;
@@ -7,6 +8,7 @@ public abstract class Corpus {
 	public int WordsCount;
 	public int DocsCount;
 	internal Dictionary<string, string> StemmerDictionary;
+	internal HashSet<string> StopWords = new();
 
 	protected Corpus() {
 	}
@@ -23,4 +25,6 @@ public abstract class Corpus {
 	public abstract IEnumerable<string> GetDocuments(string word);
 
 	public abstract int Proximity(string document, IEnumerable<string> words);
+
+	public abstract string Snippet(string document, Query query);
 }

@@ -115,10 +115,14 @@ public class Query {
 	private void StrongQueryProcess() {
 		foreach (var queryWord in Words) {
 			SuggestionDictionary[queryWord] = new Dictionary<string, double>();
+			if (queryWord.Length < 2 || _corpus.StopWords.Contains(queryWord)) {
+				SuggestionDictionary[queryWord][queryWord] = 1;
+				continue;
+			}
 			foreach (var corpusWord in _corpus.Words) {
 				var proximity = Tools.Tools.WordProximity(queryWord, corpusWord, _corpus.StemmerDictionary);
 				if (proximity is 0) continue;
-				SuggestionDictionary[queryWord][corpusWord] = proximity is 1? 1 : proximity;
+				SuggestionDictionary[queryWord][corpusWord] = proximity;
 				this[corpusWord] += _text[queryWord] * proximity;
 			}
 		}
