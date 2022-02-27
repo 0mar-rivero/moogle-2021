@@ -1,8 +1,4 @@
-﻿using System.Diagnostics;
-using System.Runtime.InteropServices;
-using System.Xml;
-using Corpus;
-using MRI;
+﻿using Corpus;
 using MRI.VectorMRI;
 
 namespace MoogleEngine;

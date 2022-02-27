@@ -7,11 +7,8 @@ namespace Corpus;
 public abstract class Corpus {
 	public int WordsCount;
 	public int DocsCount;
-	internal Dictionary<string, string> StemmerDictionary;
-	internal HashSet<string> StopWords = new();
-
-	protected Corpus() {
-	}
+	internal Dictionary<string, string> StemmerDictionary = new();
+	internal readonly HashSet<string> StopWords = new();
 
 	public abstract int this[string document, string word] { get; }
 	public abstract int this[string word] { get; }

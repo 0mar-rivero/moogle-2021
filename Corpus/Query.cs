@@ -43,20 +43,21 @@ public class Query {
 	#region RawTextProcessing
 
 	private Dictionary<string, double> ProcessQuery(List<string> rawText) {
-		ProcessBinProximity(rawText);
-		ProcessNonBinProximity(rawText);
-		ProcessPriority(rawText);
-		foreach (var word in rawText) {
+		foreach (var word in rawText.Where(word => word.TrimPunctuation() is not "")) {
 			if (ToExclude(word)) Exclusions.Add(word.TrimPunctuation());
 			if (ToInclude(word)) Inclusions.Add(word.TrimPunctuation());
 		}
+		ProcessBinProximity(rawText);
+		ProcessNonBinProximity(rawText);
 
 		var dic = new Dictionary<string, double>();
 		foreach (var word in rawText.Select(Tools.Tools.TrimPunctuation)
-			         .Where(word => !Exclusions.Contains(word) && word.Length > 1)) {
+			         .Where(word => !Exclusions.Contains(word))) {
 			if (!dic.ContainsKey(word)) dic[word] = 0;
 			dic[word]++;
 		}
+
+		ProcessPriority(rawText, dic);
 
 		return dic;
 	}
@@ -86,24 +87,11 @@ public class Query {
 		}
 	}
 
-	private static void ProcessPriority(List<string> rawText) {
-		var toAdd = new List<string>();
-		foreach (var word in rawText) {
-			for (var i = 0; i < word.Length; i++) {
-				switch (word[i]) {
-					case '^':
-						continue;
-					case '*':
-						toAdd.Add(word.TrimPunctuation());
-						continue;
-				}
-
-				break;
-			}
-		}
-
-		rawText.InsertRange(rawText.Count, toAdd);
+	private static void ProcessPriority(List<string> rawText, IDictionary<string, double> text) {
+		foreach (var word in rawText)
+			text[word.TrimPunctuation()] *= Math.Pow(Math.E, word.TakeWhile(t => t is '^' or '*').Count(t => t is '*'));
 	}
+
 
 	private static bool ToExclude(string word) => word.StartsWith('!');
 	private static bool ToInclude(string word) => word.StartsWith('^');
@@ -117,6 +105,7 @@ public class Query {
 				SuggestionDictionary[queryWord][queryWord] = 1;
 				continue;
 			}
+
 			foreach (var corpusWord in _corpus.Words) {
 				var proximity = Tools.Tools.WordProximity(queryWord, corpusWord, _corpus.StemmerDictionary);
 				if (proximity is 0) continue;
@@ -124,7 +113,7 @@ public class Query {
 				this[corpusWord] += _text[queryWord] * proximity;
 			}
 		}
-		
+
 		File.WriteAllText("../Cache/StemmerDictionary.json", JsonSerializer.Serialize(_corpus.StemmerDictionary));
 	}
 }

@@ -5,7 +5,7 @@ namespace MRI.VectorMRI;
 
 public class VectorMri : MRI {
 	private readonly TfxIdf _tfxIdf;
-	private QueryTfxIdf _queryTfxIdf;
+	private QueryTfxIdf _queryTfxIdf = null!;
 
 	public VectorMri(Corpus.Corpus corpus) : base(corpus) {
 		_tfxIdf = new TfxIdf(@"..\Cache\", corpus);
@@ -13,8 +13,8 @@ public class VectorMri : MRI {
 
 	public override IEnumerable<(string document, double score)> Query(Query query) {
 		_queryTfxIdf = new QueryTfxIdf(query, Corpus);
-		return Corpus.Documents.Where(document => query.Inclusions.All(word => Corpus[document, word] != 0) &&
-		                                          query.Exclusions.All(word => Corpus[document, word] == 0))
+		return Corpus.Documents.Where(document => query.Inclusions.All(word => Corpus[document, word] is not 0) &&
+		                                          query.Exclusions.All(word => Corpus[document, word] is 0))
 			.Select(document => (document, score: Similarity(document) * Corpus.InverseProximity(query, document))).ToList()
 			.OrderByDescending(t => t.score);
 	}
