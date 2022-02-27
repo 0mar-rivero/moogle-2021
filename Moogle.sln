@@ -11,8 +11,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Corpus", "Corpus\Corpus.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MRI", "MRI\MRI.csproj", "{AB34C373-8F14-495B-B719-C9886E38AF4B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "MoogleConsole", "MoogleConsole\MoogleConsole.csproj", "{9B2EFD92-CCD6-4BC9-AB81-4B745C08BD44}"
-EndProject
 Global
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -74,17 +72,5 @@ Global
 		{AB34C373-8F14-495B-B719-C9886E38AF4B}.Release|x64.Build.0 = Release|Any CPU
 		{AB34C373-8F14-495B-B719-C9886E38AF4B}.Release|x86.ActiveCfg = Release|Any CPU
 		{AB34C373-8F14-495B-B719-C9886E38AF4B}.Release|x86.Build.0 = Release|Any CPU
-		{9B2EFD92-CCD6-4BC9-AB81-4B745C08BD44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{9B2EFD92-CCD6-4BC9-AB81-4B745C08BD44}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{9B2EFD92-CCD6-4BC9-AB81-4B745C08BD44}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{9B2EFD92-CCD6-4BC9-AB81-4B745C08BD44}.Debug|x64.Build.0 = Debug|Any CPU
-		{9B2EFD92-CCD6-4BC9-AB81-4B745C08BD44}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{9B2EFD92-CCD6-4BC9-AB81-4B745C08BD44}.Debug|x86.Build.0 = Debug|Any CPU
-		{9B2EFD92-CCD6-4BC9-AB81-4B745C08BD44}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{9B2EFD92-CCD6-4BC9-AB81-4B745C08BD44}.Release|Any CPU.Build.0 = Release|Any CPU
-		{9B2EFD92-CCD6-4BC9-AB81-4B745C08BD44}.Release|x64.ActiveCfg = Release|Any CPU
-		{9B2EFD92-CCD6-4BC9-AB81-4B745C08BD44}.Release|x64.Build.0 = Release|Any CPU
-		{9B2EFD92-CCD6-4BC9-AB81-4B745C08BD44}.Release|x86.ActiveCfg = Release|Any CPU
-		{9B2EFD92-CCD6-4BC9-AB81-4B745C08BD44}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 EndGlobal

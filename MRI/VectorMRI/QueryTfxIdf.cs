@@ -15,7 +15,14 @@ internal class QueryTfxIdf {
 		Norm = Math.Sqrt(_weightsDictionary.Values.Select(weight => Math.Pow(weight, 2)).Sum());
 	}
 
-	private Dictionary<string, double> ProcessQuery() => _corpus.Words.ToDictionary(word => word, CalculateWq);
+	private Dictionary<string, double> ProcessQuery() => _query.Words.ToDictionary(word => word, CalculateWq);
+
+	internal IEnumerable<(string word, double weight)> Weights {
+		get {
+			foreach (var (word,weight) in _weightsDictionary)
+				yield return (word, weight);
+		}
+	} 
 
 	internal double this[string word] => _weightsDictionary.ContainsKey(word) ? _weightsDictionary[word] : 0;
 

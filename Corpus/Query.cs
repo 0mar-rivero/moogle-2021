@@ -6,8 +6,6 @@ using Corpus.Tools;
 namespace Corpus;
 
 public class Query {
-	private const double ThirdOfE = Math.E / 3;
-	private const double TenthOfPi = Math.PI / 10;
 	private readonly Dictionary<string, double> _text;
 	private readonly Dictionary<string, double> _expandedText;
 	public readonly Dictionary<string, Dictionary<string, double>> SuggestionDictionary = new();
@@ -37,7 +35,9 @@ public class Query {
 		}
 	}
 
-	public IEnumerable<string> Words => _text.Keys;
+	public IEnumerable<string> PrivateWords => _text.Keys;
+
+	public IEnumerable<string> Words => _expandedText.Keys;
 
 
 	#region RawTextProcessing
@@ -110,12 +110,10 @@ public class Query {
 
 	#endregion
 
-	#region Turbio
-
 	private void StrongQueryProcess() {
-		foreach (var queryWord in Words) {
+		foreach (var queryWord in PrivateWords) {
 			SuggestionDictionary[queryWord] = new Dictionary<string, double>();
-			if (queryWord.Length < 2 || _corpus.StopWords.Contains(queryWord)) {
+			if (_corpus.StopWords.Contains(queryWord)) {
 				SuggestionDictionary[queryWord][queryWord] = 1;
 				continue;
 			}
@@ -129,6 +127,4 @@ public class Query {
 		
 		File.WriteAllText("../Cache/StemmerDictionary.json", JsonSerializer.Serialize(_corpus.StemmerDictionary));
 	}
-
-	#endregion
 }

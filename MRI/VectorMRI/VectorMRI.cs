@@ -37,14 +37,9 @@ public class VectorMri : MRI {
 		return outPut.Trim();
 	}
 
-	private double WordRelevance(string word) => Corpus.GetDocuments(word).Sum(document => _tfxIdf[document, word]);
-
-	private IEnumerable<double> DocWeights(string document) =>
-		Corpus.Words.Select(word => _tfxIdf[document, word]);
-
-	private IEnumerable<double> QueryWeights() => Corpus.Words.Select(word => _queryTfxIdf[word]);
+	private double WordRelevance(string word) => Corpus.GetDocuments(word).Sum(document => _tfxIdf[document, word])/Corpus[word];
 
 	private double Similarity(string document) =>
-		QueryWeights().Zip(DocWeights(document)).Select(t => t.First * t.Second).Sum() /
+		_queryTfxIdf.Weights.Select(word => word.weight * _tfxIdf[document, word.word]).Sum() /
 		(_queryTfxIdf.Norm * _tfxIdf.Norm(document));
 }

@@ -117,7 +117,7 @@ public static class Tools {
 		if (word1 == word2) return 1;
 		if (word1.Stem(stemmer) == word2.Stem(stemmer)) return ThirdOfE;
 		var levenshteinFactor = Levenshtein.LevenshteinFactor(word1, word2);
-		if (levenshteinFactor > TenthOfPi) return levenshteinFactor;
+		if (levenshteinFactor is not 0) return levenshteinFactor;
 		if (Synonymous.Syn(word1, word2)) return TenthOfPi;
 		return 0;
 	}
@@ -129,7 +129,7 @@ public static class Tools {
 	public static string Snippet(string document, Corpus corpus, Query query, int size) {
 		var loadedDoc = File.ReadAllText(document).ToLower().Split().TrimPunctuation().ToArray();
 		var processedDoc = PreProcessSnippet(loadedDoc, corpus, query);
-		var acm = query.Words.Where(word => word.Length > 1 && !corpus.StopWords.Contains(word))
+		var acm = query.PrivateWords.Where(word => word.Length > 1 && !corpus.StopWords.Contains(word))
 			.ToDictionary(word => word, _ => new Dictionary<double, int>());
 		(int left, int right) best = (0, 0);
 		var bestScore = double.MinValue;
@@ -191,7 +191,7 @@ public static class Tools {
 					reloadedDoc.Add((i, new Dictionary<string, double>()));
 				}
 
-				reloadedDoc[^1].relevance[word] = candidates[document[i]];
+				reloadedDoc[^1].relevance[word] = candidates[document[i]] * (1 - corpus[word] / corpus.DocsCount);
 			}
 		}
 

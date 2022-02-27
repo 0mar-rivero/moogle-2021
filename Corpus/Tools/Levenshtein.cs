@@ -4,7 +4,7 @@ namespace Corpus.Tools;
 
 public class Levenshtein {
 	public static double LevenshteinFactor(string word1, string word2) {
-		if (word1.Length < 2 || word2.Length < 2) return 0;
+		if (word1.Length <= 2 || word2.Length <= 2) return 0;
 		if (word1.Length * 4d / 3 + .5 < word2.Length || word1.Length * 2d / 3 - .5 > word2.Length) return 0;
 		if (!Levenshteable(word1, word2)) return 0;
 		var levenshteinDistance = LevenshteinDistance(word1, word2, word1.Length / 3d);
