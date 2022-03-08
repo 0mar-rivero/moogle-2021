@@ -52,7 +52,7 @@ public class Query {
 
 		var dic = new Dictionary<string, double>();
 		foreach (var word in rawText.Select(Tools.Tools.TrimPunctuation)
-			         .Where(word => !Exclusions.Contains(word))) {
+			         .Where(word => word is not "" && !Exclusions.Contains(word))) {
 			if (!dic.ContainsKey(word)) dic[word] = 0;
 			dic[word]++;
 		}
@@ -88,8 +88,8 @@ public class Query {
 	}
 
 	private static void ProcessPriority(List<string> rawText, IDictionary<string, double> text) {
-		foreach (var word in rawText)
-			text[word.TrimPunctuation()] *= Math.Pow(Math.E, word.TakeWhile(t => t is '^' or '*').Count(t => t is '*'));
+		foreach (var word in rawText.Select(Tools.Tools.TrimPunctuation).Where(word => word is not ""))
+			text[word] *= Math.Pow(Math.E, word.TakeWhile(t => t is '^' or '*').Count(t => t is '*'));
 	}
 
 

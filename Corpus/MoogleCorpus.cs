@@ -3,14 +3,14 @@ using Corpus.Tools;
 
 namespace Corpus;
 
-public class TestCorpus : Corpus {
+public class MoogleCorpus : Corpus {
 	private readonly string _path;
 	private readonly Dictionary<string, Dictionary<string, List<int>>> _vocabulary;
 	private const string VocabularyPath = "../Cache/Vocabulary.json";
 	private readonly Dictionary<string, int> _mostRepeatedWordOccurrences;
 	private const string MostRepeatedPath = "../Cache/MostRepeated.json";
 
-	public TestCorpus(string path) {
+	public MoogleCorpus(string path) {
 		_path = path;
 		DocsCount = Documents.Count();
 		try {
@@ -86,8 +86,8 @@ public class TestCorpus : Corpus {
 		}
 
 		foreach (var document in Documents) {
-			_mostRepeatedWordOccurrences.Add(document,
-				Words.Where(word => word.Length > 1 && !StopWords.Contains(word)).Select(word => this[document, word]).Max());
+			_mostRepeatedWordOccurrences[document] = Words.Where(word => _vocabulary[word].ContainsKey(document) && word.Length > 1 && !StopWords.Contains(word))
+				.Select(word => this[document, word]).Max();
 		}
 	}
 
@@ -135,9 +135,9 @@ public class TestCorpus : Corpus {
 	/// <param name="document">Documento sobre el cual buscar el segmento.</param>
 	/// <param name="query">Query a la que buscarle el mejor segmento del documento.</param>
 	/// <returns>El mejor segmento del documento para la query.</returns>
-	public override string Snippet(string document, Query query) => 
+	public override string Snippet(string document, Query query) =>
 		Tools.Tools.Snippet(document, this, query, 75);
-	
+
 	/// <summary>
 	/// Carga los índices de una colección de palabras en un documento.
 	/// </summary>
