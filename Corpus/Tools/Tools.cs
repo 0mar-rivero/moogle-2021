@@ -175,7 +175,7 @@ public static class Tools {
 
 		if (loadedDoc.Length < size) best = (0, loadedDoc.Length - 1);
 		var toAdd = (size - (best.right - best.left)) / 2;
-		best = ((best.left - toAdd) < 0 ? 0 : (best.left - toAdd),
+		best = (best.left - toAdd < 0 ? 0 : best.left - toAdd,
 		best.right + toAdd >= loadedDoc.Length ? loadedDoc.Length - 1 : best.right + toAdd);
 		return string.Join(" ", File.ReadAllText(document).Split()[best.left..(best.right + 1)]);
 	}

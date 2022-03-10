@@ -1,4 +1,5 @@
 ﻿using System.Text.Json;
+using System.Text.Json.Nodes;
 using Corpus.Tools;
 
 namespace Corpus;
@@ -9,28 +10,40 @@ public class MoogleCorpus : Corpus {
 	private const string VocabularyPath = "../Cache/Vocabulary.json";
 	private readonly Dictionary<string, int> _mostRepeatedWordOccurrences;
 	private const string MostRepeatedPath = "../Cache/MostRepeated.json";
+	private const string DatesPath = "../Cache/LastMod.json";
 
 	public MoogleCorpus(string path) {
 		_path = path;
 		DocsCount = Documents.Count();
 		try {
+			var dates = JsonSerializer.Deserialize<Dictionary<string, DateTime>>(
+				File.ReadAllText(DatesPath)) ?? throw new Exception();
+			if (Documents.Count() != dates.Keys.Count ||
+			    dates.Keys.Intersect(Documents).Count() != dates.Keys.Count) throw new Exception();
+			if (Documents.Any(doc => new FileInfo(doc).LastWriteTime != dates[doc]))
+				throw new Exception();
 			_vocabulary =
 				JsonSerializer.Deserialize<Dictionary<string, Dictionary<string, List<int>>>>(
 					File.ReadAllText(VocabularyPath)) ?? throw new Exception();
 			_mostRepeatedWordOccurrences =
 				JsonSerializer.Deserialize<Dictionary<string, int>>(
 					File.ReadAllText(MostRepeatedPath)) ?? throw new Exception();
+			
 		}
 		catch {
+			Console.WriteLine("Lol");
+			Changed = true;
+			var dates = Documents.ToDictionary(doc => doc, doc => new FileInfo(doc).LastWriteTime);
 			_vocabulary = new Dictionary<string, Dictionary<string, List<int>>>();
 			_mostRepeatedWordOccurrences = new Dictionary<string, int>();
 			ProcessCorpus();
+			File.WriteAllText(DatesPath, JsonSerializer.Serialize(dates));
 			File.WriteAllText(VocabularyPath, JsonSerializer.Serialize(_vocabulary));
 			File.WriteAllText(MostRepeatedPath, JsonSerializer.Serialize(_mostRepeatedWordOccurrences));
 		}
 
 		WordsCount = _vocabulary.Count;
-		StemmerDictionary = LoadStemmerDictionary("../Cache/StemmerDictionary.json");
+		StemmerDictionary = LoadStemmerDictionary("../Data/StemmerDictionary.json");
 	}
 
 	/// <summary>

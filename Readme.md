@@ -22,7 +22,7 @@ Este método devuelve un objeto de tipo `SearchResult`. Este objeto contiene los
 
 Esto es lo que hay ahora en este método:
 
-```cs
+```c#
 public static class Moogle
 {
     public static SearchResult Query(string query) {

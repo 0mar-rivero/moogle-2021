@@ -22,7 +22,7 @@ internal class QueryTfxIdf {
 			foreach (var (word,weight) in _weightsDictionary)
 				yield return (word, weight);
 		}
-	} 
+	}
 
 	internal double this[string word] => _weightsDictionary.ContainsKey(word) ? _weightsDictionary[word] : 0;
 

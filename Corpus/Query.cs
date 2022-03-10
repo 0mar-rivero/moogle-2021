@@ -18,7 +18,7 @@ public class Query {
 
 	public Query(string text, Corpus corpus) {
 		_corpus = corpus;
-		var rawText = text.ToLower().Split().ToList();
+		var rawText = text.ToLower().Split().Where(word=>word is not "").ToList();
 		Exclusions = new HashSet<string>();
 		Inclusions = new HashSet<string>();
 		Proximity = new HashSet<HashSet<string>>();
@@ -35,7 +35,7 @@ public class Query {
 		}
 	}
 
-	public IEnumerable<string> PrivateWords => _text.Keys;
+	public IEnumerable<string>PrivateWords => _text.Keys;
 
 	public IEnumerable<string> Words => _expandedText.Keys;
 
@@ -89,7 +89,7 @@ public class Query {
 
 	private static void ProcessPriority(List<string> rawText, IDictionary<string, double> text) {
 		foreach (var word in rawText.Select(Tools.Tools.TrimPunctuation).Where(word => word is not ""))
-			text[word] *= Math.Pow(Math.E, word.TakeWhile(t => t is '^' or '*').Count(t => t is '*'));
+			text[word] += Math.Pow(Math.E, word.TakeWhile(t => t is '^' or '*').Count(t => t is '*')) - 1;
 	}
 
 
@@ -99,7 +99,7 @@ public class Query {
 	#endregion
 
 	private void StrongQueryProcess() {
-		foreach (var queryWord in PrivateWords) {
+		foreach (var queryWord in _text.Keys) {
 			SuggestionDictionary[queryWord] = new Dictionary<string, double>();
 			if (_corpus.StopWords.Contains(queryWord)) {
 				SuggestionDictionary[queryWord][queryWord] = 1;
@@ -114,6 +114,6 @@ public class Query {
 			}
 		}
 
-		File.WriteAllText("../Cache/StemmerDictionary.json", JsonSerializer.Serialize(_corpus.StemmerDictionary));
+		File.WriteAllText("../Data/StemmerDictionary.json", JsonSerializer.Serialize(_corpus.StemmerDictionary));
 	}
 }

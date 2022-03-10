@@ -8,7 +8,7 @@ public class VectorMri : MRI {
 	private QueryTfxIdf _queryTfxIdf = null!;
 
 	public VectorMri(Corpus.Corpus corpus) : base(corpus) {
-		_tfxIdf = new TfxIdf(@"..\Cache\", corpus);
+		_tfxIdf = new TfxIdf(corpus);
 	}
 
 	public override IEnumerable<(string document, double score)> Query(Query query) {
@@ -37,7 +37,7 @@ public class VectorMri : MRI {
 		return outPut.Trim();
 	}
 
-	private double WordRelevance(string word) => Corpus.GetDocuments(word).Sum(document => _tfxIdf[document, word])/Corpus[word];
+	private double WordRelevance(string word) => Corpus.GetDocuments(word).Sum(document => _tfxIdf[document, word]);
 
 	private double Similarity(string document) =>
 		_queryTfxIdf.Weights.Select(word => word.weight * _tfxIdf[document, word.word]).Sum() /

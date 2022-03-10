@@ -9,7 +9,7 @@ public static class Synonymous {
 		if (_synonymousMap is null)
 			try {
 				_synonymousMap =
-					JsonSerializer.Deserialize<Dictionary<string, string[]>>(File.ReadAllText("../Cache/Synonymous.json"));
+					JsonSerializer.Deserialize<Dictionary<string, string[]>>(File.ReadAllText("../Data/Synonymous.json"));
 			}
 			catch {
 				_synonymousMap = new Dictionary<string, string[]>();
