@@ -1,9 +1,17 @@
 ﻿namespace Corpus.Tools;
-
+/// <summary>
+/// Clase con las herramientas útiles para el análisis del corpus.
+/// </summary>
 public static class Tools {
 	private const double ThirdOfE = Math.E / 3;
 	private const double TenthOfPi = Math.PI / 10;
 
+	/// <summary>
+	/// Genera una colección de tuplas a partir de un Enumerable de modo que el primer elemento es el índice y el segundo el elemento del enumerable.
+	/// </summary>
+	/// <param name="collection">Enumerable sobre el cúal construir las tuplas.</param>
+	/// <typeparam name="T">Tipo de los objetos de la colección.</typeparam>
+	/// <returns>Enumerable de tuplas(índice, elemento).</returns>
 	public static IEnumerable<(int index, T elem)> Enumerate<T>(this IEnumerable<T> collection) {
 		var index = 0;
 		foreach (var elem in collection)
@@ -77,6 +85,13 @@ public static class Tools {
 		return min;
 	}
 
+	/// <summary>
+	/// Determina por que valor debe dividirse el resultado de relevancia del documento en función de las palabras relacionadas por los operadores de cercanía.
+	/// </summary>
+	/// <param name="corpus">Corpus.</param>
+	/// <param name="query">Consulta.</param>
+	/// <param name="document">Documento.</param>
+	/// <returns></returns>
 	public static double InverseProximity(this Corpus corpus, Query query, string document) =>
 		1 / (double)query.Proximity
 			.Select(proximitySet => corpus.Proximity(document, proximitySet))
@@ -120,6 +135,13 @@ public static class Tools {
 
 	#region WordProximity
 
+	/// <summary>
+	/// Determina cúan buena es una palabra con respecto a otra en dependencia de sus raíces, similitud gráfica y sinonimia.
+	/// </summary>
+	/// <param name="word1">Palabra 1.</param>
+	/// <param name="word2">Palabra 2.</param>
+	/// <param name="stemmer">Diccionario de palabra contra su raíz.</param>
+	/// <returns>Número real entre 0 y 1 según la cercanía léxica de las palabras.</returns>
 	public static double WordProximity(string word1, string word2, Dictionary<string, string> stemmer) {
 		if (word1 == word2) return 1;
 		if (word1.Stem(stemmer) == word2.Stem(stemmer)) return ThirdOfE;
@@ -133,6 +155,14 @@ public static class Tools {
 
 	#region Snippet
 
+	/// <summary>
+	/// Halla la mejor subcadena de un documento para una consulta específica según cuanto la representa.
+	/// </summary>
+	/// <param name="document">Documento.</param>
+	/// <param name="corpus">Corpus.</param>
+	/// <param name="query">Consulta.</param>
+	/// <param name="size">Tamaño máximo para la subcadena.</param>
+	/// <returns>Mejor subcadena en un documento de un tamaño específico con respecto a una consulta.</returns>
 	public static string Snippet(string document, Corpus corpus, Query query, int size) {
 		var loadedDoc = File.ReadAllText(document).ToLower().Split().TrimPunctuation().ToArray();
 		var processedDoc = PreProcessSnippet(loadedDoc, corpus, query);
@@ -187,6 +217,13 @@ public static class Tools {
 		return string.Join(" ", File.ReadAllText(document).Split()[best.left..(best.right + 1)]);
 	}
 
+	/// <summary>
+	/// Procesa un documentoy coloca en cada palabra un diccionario que representa cúan buena es para cada palabra en la consulta.
+	/// </summary>
+	/// <param name="document">Documento.</param>
+	/// <param name="corpus">Corpus.</param>
+	/// <param name="query">Consulta.</param>
+	/// <returns>Lista de tuplas de palabra y diccionario donde el diccionario contiene cúan buena es la palabra por cada palabra de la consulta.</returns>
 	private static List<(int index, Dictionary<string, double> relevance)> PreProcessSnippet(string[] document,
 		Corpus corpus, Query query) {
 		var reloadedDoc = new List<(int index, Dictionary<string, double> relevance)>();

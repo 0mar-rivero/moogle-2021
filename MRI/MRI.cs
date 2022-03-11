@@ -1,7 +1,9 @@
 ﻿using Corpus;
 
 namespace MRI;
-
+/// <summary>
+/// Clase abstracta de la cuál deben heredar los modelos de recuperación de la información.
+/// </summary>
 public abstract class MRI {
 	protected readonly Corpus.Corpus Corpus;
 
