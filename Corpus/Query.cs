@@ -97,7 +97,9 @@ public class Query {
 	private static bool ToInclude(string word) => word.StartsWith('^');
 
 	#endregion
-
+	/// <summary>
+	/// Rellena la consulta con las palabras del corpus cercanas a cada una de las palabras de la consulta original. 
+	/// </summary>
 	private void StrongQueryProcess() {
 		foreach (var queryWord in _text.Keys) {
 			SuggestionDictionary[queryWord] = new Dictionary<string, double>();

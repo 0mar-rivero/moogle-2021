@@ -18,7 +18,11 @@ public class VectorMri : MRI {
 			.Select(document => (document, score: Similarity(document) * Corpus.InverseProximity(query, document))).ToList()
 			.OrderByDescending(t => t.score);
 	}
-
+	/// <summary>
+	/// Sugiere una consulta nueva con buenos resultados de búsqueda.
+	/// </summary>
+	/// <param name="query">Consulta.</param>
+	/// <returns>Una consulta con palabras cercanas a la consulta original con buenos resultados garantizados.</returns>
 	public override string Suggestion(Query query) {
 		var outPut = "";
 		foreach (var (_, candidates) in query.SuggestionDictionary) {
@@ -36,9 +40,18 @@ public class VectorMri : MRI {
 
 		return outPut.Trim();
 	}
-
+	/// <summary>
+	/// Devuelve un valor que indica cúan bueno es buscar una palabra en el corpus mediante la duma de sus pesos en los documentos donde aparece.
+	/// </summary>
+	/// <param name="word">Palabra.</param>
+	/// <returns>Suma de los pesos de la palabra en todos los documentos.</returns>
 	private double WordRelevance(string word) => Corpus.GetDocuments(word).Sum(document => _tfxIdf[document, word]);
 
+	/// <summary>
+	/// Calcula el coseno del ángulo entre el vector del documento y el vector de la consulta.
+	/// </summary>
+	/// <param name="document">Documento.</param>
+	/// <returns>Valor entre 0 y 1 que indica el grado de relevancia del documento para la consulta</returns>
 	private double Similarity(string document) =>
 		_queryTfxIdf.Weights.Select(word => word.weight * _tfxIdf[document, word.word]).Sum() /
 		(_queryTfxIdf.Norm * _tfxIdf.Norm(document));

@@ -27,7 +27,10 @@ public class TfxIdf {
 			File.WriteAllText(NormsPath, JsonSerializer.Serialize(_norms));
 		}
 	}
-
+	/// <summary>
+	/// Recorre todo el corpus y crea un diccionario que guarda para cada palabra un diccionario con sus pesos en los documentos.
+	/// </summary>
+	/// <returns>Diccionario con los pesos de cada palabra en cada documento</returns>
 	private Dictionary<string, Dictionary<string, double>> ProcessTFxIdf() {
 		var tfxIdf = new Dictionary<string, Dictionary<string, double>>();
 		foreach (var word in _corpus.Words) {

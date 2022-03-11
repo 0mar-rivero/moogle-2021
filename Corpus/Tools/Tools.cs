@@ -38,7 +38,11 @@ public static class Tools {
 
 		return merged;
 	}
-
+	/// <summary>
+	/// Encuentra la longitud del menor intervalo que contiene a las palabras que son llaves del diccionario "indexDictionary".
+	/// </summary>
+	/// <param name="indexDictionary">Diccionario donde las llaves son palabras y el valor una lista con los índices de cada palabra en un documento.</param>
+	/// <returns>Longitud del intervalo más pequeño que contiene todas las palabras que son llaves de "indexDictionary".</returns>
 	public static int Proximity(Dictionary<string, List<int>> indexDictionary) {
 		var indexes = indexDictionary.SortedMerge();
 		indexes.TrimExcess();
@@ -48,8 +52,10 @@ public static class Tools {
 		var tCount = 0;
 		var min = int.MaxValue;
 		var canMove = true;
-
+		
 		while (canMove) {
+			//mientras haya alguna palabra que no esté contenida en el intervalo se desplaza el extremo derecho para la derecha
+			//tratando de encontrar un intervalo que las contenga a todas
 			canMove = false;
 			while (tCount < count.Count && right < indexes.Count - 1) {
 				canMove = true;
@@ -57,7 +63,8 @@ public static class Tools {
 				count[indexes[right].word]++;
 				if (count[indexes[right].word] == 1) tCount++;
 			}
-
+			//una vez se logra que el intervalo contenga todas las palabras se comienza a desplazar el extremo izquierdo todo
+			//lo posible para minimizar la longitud del mismo
 			while (tCount == count.Count && left < right) {
 				canMove = true;
 				count[indexes[left].word]--;

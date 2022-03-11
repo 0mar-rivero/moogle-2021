@@ -48,6 +48,10 @@ Los objetos de esta clase son indizables de modo que `Corpus[string word, string
 El cálculo del TFxIDF es llevado a cabo por la clase `TfxIdf`. Su constructor recibe una instancia de la clase `Corpus` y llama al método `ProcessTFxIdf()` que devuelve un diccionario `Dictionary<string, Dictionary<string, double>>` donde a cada palabra se le asigna un diccionario con los documentos en los que aparece y su peso en estos. También se encarga de crear y almacenar un diccionario que para cada documento almacena la norma de su vector.
 
 ```c#
+/// <summary>
+/// Recorre todo el corpus y crea un diccionario que guarda para cada palabra un diccionario con sus pesos en los documentos.
+/// </summary>
+/// <returns>Diccionario con los pesos de cada palabra en cada documento</returns>
 private Dictionary<string, Dictionary<string, double>> ProcessTFxIdf() {
 	var tfxIdf = new Dictionary<string, Dictionary<string, double>>();
 	foreach (var word in _corpus.Words) {
@@ -74,6 +78,9 @@ Luego, se genera un diccionario donde a cada palabra de la consulta se le asigna
 La clase `Query` es indizable y `Query[string word]` retorna el número de apariciones de `word` en la consulta enriquecida (este no es necesariamente natural).
 
 ```c#
+/// <summary>
+/// Rellena la consulta con las palabras del corpus cercanas a cada una de las palabras de la consulta original. 
+/// </summary>
 private void StrongQueryProcess() {
 	foreach (var queryWord in _text.Keys) {
 		SuggestionDictionary[queryWord] = new Dictionary<string, double>();
@@ -122,6 +129,11 @@ La propiedad `Weights` retorna un `IEnumerable<(string word, double weight)>` co
 Este es llevado a cabo por una instancia de la clase `VectorMri : MRI` que recibe como constructor un objeto de tipo `Corpus` y genera para él un objeto de tipo `TfxIdf`. Su método `Query` recibe una instancia  de `Query` y retorna un `IEnumerable<(string document, double score)>` con las tuplas ordenas de los documentos y sus puntuaciones. Las puntuaciones retornadas son el resultado del cálculo del coseno de los vectores con el vector consulta multiplicado por la proximidad inversa. Esta última es el producto de los recíprocos de los logaritmos en base 5 de las longitudes de los mejores intervalos que contienen todas las palabras de cada uno de los conjuntos creados por los operadores de cercanía de la consulta.
 
 ```c#
+/// <summary>
+/// Realiza el càlculo de la similitud entre la consulta y cada uno de los documentos, elimina aquellos resultados que no cumplen con los requisitos de inclusión y exclusión, divide la puntuación de cada uno entre la proximidad inversa y los ordena descendentemente.
+/// </summary>
+/// <param name="query">Consulta.</param>
+/// <returns>Enumerable de tuplas ordenadas descendentemente de documentos y puntuación. Donde la puntuación indica cuan bueno es cada documento para la consulta.</returns>
 public override IEnumerable<(string document, double score)> Query(Query query) {
 	_queryTfxIdf = new QueryTfxIdf(query, Corpus);
 	return Corpus.Documents.Where(document => query.Inclusions.All(word => Corpus[document, word] is not 0) &&
@@ -136,6 +148,11 @@ public override IEnumerable<(string document, double score)> Query(Query query) 
 Para el cálculo del coseno entre un vector documento y el vector consulta se divide el producto de estos por el producto de la norma de estos.
 
 ```c#
+/// <summary>
+/// Calcula el coseno del ángulo entre el vector del documento y el vector de la consulta.
+/// </summary>
+/// <param name="document">Documento.</param>
+/// <returns>Valor entre 0 y 1 que indica el grado de relevancia del documento para la consulta</returns>
 private double Similarity(string document) =>
 		_queryTfxIdf.Weights.Select(word => word.weight * _tfxIdf[document, word.word]).Sum() /
 		(_queryTfxIdf.Norm * _tfxIdf.Norm(document));
@@ -144,35 +161,43 @@ private double Similarity(string document) =>
 Para el cálculo del mejor intervalo que contiene todas las palabras de un conjunto en un documento se mezclan ordenadamente las listas de los índices de las palabras del conjunto en el documento y luego se recorre la lista resultante en busca del intervalo de menor distancia que contenga cada uno de los vocablos.
 
 ```c#
+/// <summary>
+/// Encuentra la longitud del menor intervalo que contiene a las palabras que son llaves del diccionario "indexDictionary".
+/// </summary>
+/// <param name="indexDictionary">Diccionario donde las llaves son palabras y el valor una lista con los índices de cada palabra en un documento.</param>
+/// <returns>Longitud del intervalo más pequeño que contiene todas las palabras que son llaves de "indexDictionary".</returns>
 public static int Proximity(Dictionary<string, List<int>> indexDictionary) {
-	var indexes = indexDictionary.SortedMerge();
-	indexes.TrimExcess();
-	var count = indexDictionary.ToDictionary(t => t.Key, _ => 0);
-	var left = 0;
-	var right = -1;
-	var tCount = 0;
-	var min = int.MaxValue;
-	var canMove = true;
+    var indexes = indexDictionary.SortedMerge();
+    indexes.TrimExcess();
+    var count = indexDictionary.ToDictionary(t => t.Key, _ => 0);
+    var left = 0;
+    var right = -1;
+    var tCount = 0;
+    var min = int.MaxValue;
+    var canMove = true;
+    
+    while (canMove) {
+        //mientras haya alguna palabra que no esté contenida en el intervalo se desplaza el extremo derecho para la derecha
+        //tratando de encontrar un intervalo que las contenga a todas
+        canMove = false;
+        while (tCount < count.Count && right < indexes.Count - 1) {
+            canMove = true;
+            right++;
+            count[indexes[right].word]++;
+            if (count[indexes[right].word] == 1) tCount++;
+        }
+        //una vez se logra que el intervalo contenga todas las palabras se comienza a desplazar el extremo izquierdo todo
+        //lo posible para minimizar la longitud del mismo
+        while (tCount == count.Count && left < right) {
+            canMove = true;
+            count[indexes[left].word]--;
+            if (count[indexes[left].word] == 0) tCount--;
+            min = Math.Min(indexes[right].index - indexes[left].index, min);
+            left++;
+        }
+    }
 
-	while (canMove) {
-		canMove = false;
-		while (tCount < count.Count && right < indexes.Count - 1) {
-			canMove = true;
-			right++;
-			count[indexes[right].word]++;
-			if (count[indexes[right].word] == 1) tCount++;
-		}
-
-		while (tCount == count.Count && left < right) {
-			canMove = true;
-			count[indexes[left].word]--;
-			if (count[indexes[left].word] == 0) tCount--;
-			min = Math.Min(indexes[right].index - indexes[left].index, min);
-			left++;
-		}
-	}
-
-	return min;
+    return min;
 }
 ```
 
@@ -185,23 +210,33 @@ Para determinar cúal es el mejor snippet se mezclan ordenamente los índices de
 Para determinar la sugerencia dada una consulta se revisa para cada una de las palabras originales de la consulta cúal es la palabra "cercana" a esta que mejor resultado ofrece para el corpus. Para esto se halla la suma del `TfxIdf` en los documentos de cada una de las palabras "cercanas" y se multiplica por la similaridad con la palabra original. Una vez se tiene el mejor sustituto(puede ser la misma palabra) para cada palabra se concatena y devuelve.
 
 ```c#
+/// <summary>
+/// Sugiere una consulta nueva con buenos resultados de búsqueda.
+/// </summary>
+/// <param name="query">Consulta.</param>
+/// <returns>Una consulta con palabras cercanas a la consulta original con buenos resultados garantizados.</returns>
 public override string Suggestion(Query query) {
-	var outPut = "";
-	foreach (var (_, candidates) in query.SuggestionDictionary) {
-		outPut += ' ';
-		var max = double.MinValue;
-		var bestWord = "";
-		foreach (var (candidate, score) in candidates) {
-			if (score * WordRelevance(candidate) <= max) continue;
-			max = score * WordRelevance(candidate);
-			bestWord = candidate;
-		}
+    var outPut = "";
+    foreach (var (_, candidates) in query.SuggestionDictionary) {
+        outPut += ' ';
+        var max = double.MinValue;
+        var bestWord = "";
+        foreach (var (candidate, score) in candidates) {
+            if (score * WordRelevance(candidate) <= max) continue;
+            max = score * WordRelevance(candidate);
+            bestWord = candidate;
+        }
 
-		outPut += bestWord;
-	}
+        outPut += bestWord;
+    }
 
-	return outPut.Trim();
+    return outPut.Trim();
 }
+/// <summary>
+/// Devuelve un valor que indica cúan bueno es buscar una palabra en el corpus mediante la duma de sus pesos en los documentos donde aparece.
+/// </summary>
+/// <param name="word">Palabra.</param>
+/// <returns>Suma de los pesos de la palabra en todos los documentos.</returns>
 private double WordRelevance(string word) => Corpus.GetDocuments(word).Sum(document => _tfxIdf[document, word])/Corpus[word];
 ```
 
@@ -212,6 +247,11 @@ private double WordRelevance(string word) => Corpus.GetDocuments(word).Sum(docum
 Utilizado para el almacenamiento de todas las palabras para eliminar los caracteres no alfanuméricos de los extremos de la palabra.
 
 ```c#
+/// <summary>
+/// Elimina de los extremos de una palabra todos los caracteres no alfanuméricos.
+/// </summary>
+/// <param name="word">Palabra.</param>
+/// <returns>Palabra con los extremos no alfanuméricos eliminados.</returns>
 public static string TrimPunctuation(this string word) {
 	var first = 0;
 	var last = word.Length;
@@ -236,6 +276,13 @@ public static string TrimPunctuation(this string word) {
 Utilizado para eliminar ciertas terminaciones de una region dada de una palabra. Recibe un diccionario de `int` contra conjuntos de terminaciones de esa longitud. Revisa si la palabra termina en en una de esas terminaciones y de ser asi la elimina y retorna `true`.
 
 ```c#
+/// <summary>
+/// Intenta eliminar alguno de los sufijos en el diccionario de sufijos de la palabra.
+/// </summary>
+/// <param name="word">Palabra.</param>
+/// <param name="region">Región admisible para elminar sufijos.</param>
+/// <param name="suffixDic">Diccionario de sufijos a eliminar.</param>
+/// <returns>true si logró eliminar alguno de los sufijos del diccionario, false en caso contrario.</returns>
 private static bool TryDelete(ref string word, int region, SuffixDic suffixDic) {
     foreach (var (length, suffixes) in suffixDic) {
         if (word.Length - length < region) continue;

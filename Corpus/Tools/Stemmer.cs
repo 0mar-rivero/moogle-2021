@@ -260,7 +260,13 @@ public static class Stemmer {
 	private static bool IsVowel(this char character) => VowelList.Contains(character);
 
 	private static bool IsNotVowel(this char character) => !VowelList.Contains(character);
-
+	/// <summary>
+	/// Intenta eliminar alguno de los sufijos en el diccionario de sufijos de la palabra.
+	/// </summary>
+	/// <param name="word">Palabra.</param>
+	/// <param name="region">Región admisible para elminar sufijos.</param>
+	/// <param name="suffixDic">Diccionario de sufijos a eliminar.</param>
+	/// <returns>true si logró eliminar alguno de los sufijos del diccionario, false en caso contrario.</returns>
 	private static bool TryDelete(ref string word, int region, SuffixDic suffixDic) {
 		foreach (var (length, suffixes) in suffixDic) {
 			if (word.Length - length < region) continue;
