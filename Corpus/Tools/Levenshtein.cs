@@ -1,8 +1,10 @@
 ﻿using System.Text;
 
 namespace Corpus.Tools; 
-
-public class Levenshtein {
+/// <summary>
+/// Clase estática encargada del calcula la distancia de Levenshtein entre dos palabras.
+/// </summary>
+public static class Levenshtein {
 	public static double LevenshteinFactor(string word1, string word2) {
 		if (word1.Length <= 2 || word2.Length <= 2) return 0;
 		if (word1.Length * 4d / 3 + .5 < word2.Length || word1.Length * 2d / 3 - .5 > word2.Length) return 0;

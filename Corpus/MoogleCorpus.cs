@@ -1,9 +1,13 @@
-﻿using System.Text.Json;
+﻿using System.Collections;
+using System.Collections.ObjectModel;
+using System.Text.Json;
 using System.Text.Json.Nodes;
 using Corpus.Tools;
 
 namespace Corpus;
-
+/// <summary>
+/// Clase encargada del procesamiento de los docuemntos en el Moogle!
+/// </summary>
 public class MoogleCorpus : Corpus {
 	private readonly string _path;
 	private readonly Dictionary<string, Dictionary<string, List<int>>> _vocabulary;
@@ -11,7 +15,11 @@ public class MoogleCorpus : Corpus {
 	private readonly Dictionary<string, int> _mostRepeatedWordOccurrences;
 	private const string MostRepeatedPath = "../Cache/MostRepeated.json";
 	private const string DatesPath = "../Cache/LastMod.json";
-
+	/// <summary>
+	/// Crea una nueva instancia de MoogleCorpus. Esta comprueba si los documentos coinciden con los procesados la última vez que se ejecutó la aplicación y de ser así carga la información relativa a los mismos. En caso contrario reprocesa todos los documentos
+	/// </summary>
+	/// <param name="path">Dirección relativa de los documentos.</param>
+	/// <exception cref="Exception">La dirección introducida no existe.</exception>
 	public MoogleCorpus(string path) {
 		_path = path;
 		DocsCount = Documents.Count();
@@ -83,7 +91,8 @@ public class MoogleCorpus : Corpus {
 	public override int this[string word] => _vocabulary.ContainsKey(word) ? _vocabulary[word].Count : 0;
 
 	/// <summary>
-	/// Procesa el corpus.
+	/// Recorre cada uno de los documentos mientras va rellenando un diccionario que a cada palabra le hace corresponder un diccionario cuyas llaves son los documentos en los que aparece la palabra y cuyos valores son listas con los índices de la palabra en el documento.
+	/// Además rellenas un diccionario que para cada documento guarda cuantas veces se repite la palabra que más ocurre.
 	/// </summary>
 	protected sealed override void ProcessCorpus() {
 		foreach (var document in Documents) {
@@ -128,8 +137,8 @@ public class MoogleCorpus : Corpus {
 	/// </summary>
 	/// <param name="word">Palabra de la cual devolver los documentos.</param>
 	/// <returns>Colección de los documentos en los que aparece la palabra.</returns>
-	public override IEnumerable<string> GetDocuments(string word) =>
-		_vocabulary.ContainsKey(word) ? _vocabulary[word].Keys : Enumerable.Empty<string>();
+	public override ICollection<string> GetDocuments(string word) =>
+		_vocabulary.ContainsKey(word) ? _vocabulary[word].Keys : new Collection<string>();
 
 	/// <summary>
 	/// Devuelve cual es la menor distancia que contiene una colección de palabras.
