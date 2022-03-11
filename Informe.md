@@ -73,7 +73,7 @@ El procesamiento de la consulta es llevado a cabo por la clase `Query`. Esta se 
 
 Para los operadores `!` y `^` se buscan las palabras precedidas de los mismos y se incluyen en los `HashSet<string>` de las propiedades `Exclusions` e `Inclusions` respectivamente. En el caso de `*` se buscan las palabras que comiencen con este y en vez de contar esa aparición de las mismas como una, se cuenta como *eⁿ* donde *n* es la cantidad de veces que se usó el operador. Para los operadores `~` y `~~` se incluyen las palabras que deban estar cercanas en un mismo `HashSet<string>` y luego todos estos conjuntos son agrupados en el `HashSet<HashSet<string>>` de la propiedad `Proximity`.
 
-Luego, se genera un diccionario donde a cada palabra de la consulta se le asigna la cantidad de veces que apareció en la misma y se reprocesa la consulta, añadiendo palabras de los documentos que sean "similares" a la palabras originales de la misma (estas palabras son añadidas con una frecuencia que depende del grado de similaridad), al mismo tiempo que estas palabras "similares" son guardadas en un diccionario para su psterior uso en la sugerencia y el snippet.
+Luego, se genera un diccionario donde a cada palabra de la consulta se le asigna la cantidad de veces que apareció en la misma y se reprocesa la consulta, añadiendo palabras de los documentos que sean "similares" a la palabras originales de la misma (estas palabras son añadidas con una frecuencia que depende del grado de similaridad), al mismo tiempo que estas palabras "similares" son guardadas en un diccionario para su posterior uso en la sugerencia y el snippet.
 
 La clase `Query` es indizable y `Query[string word]` retorna el número de apariciones de `word` en la consulta enriquecida (este no es necesariamente natural).
 
@@ -203,7 +203,7 @@ public static int Proximity(Dictionary<string, List<int>> indexDictionary) {
 
 ### Ubicación del snippet o fragmento relevante
 
-Para determinar cúal es el mejor snippet se mezclan ordenamente los índices de las palabras "cercanas" a las palabras de la búsqueda en el documento y luego se busca en este cúal es el intervalo de 50 palabras que mejor resultado ofrece. EL valor de un intervalo está determinado por la suma de la representación de cada palabra de la consulta original en el mismo. La representación de una palabra en el intervalo está dada por el maximo del valor que resulta de multiplicar la similaridad de cada palabra por (1- la frecuencia de aparición de esa palabra en el corpus).
+Para determinar cúal es el mejor snippet se mezclan ordenamente los índices de las palabras "cercanas" a las palabras de la búsqueda en el documento y luego se busca en este cúal es el intervalo de 50 palabras que mejor resultado ofrece. EL valor de un intervalo está determinado por la suma de la representación de cada palabra de la consulta original en el mismo. La representación de una palabra en el intervalo está dada por el máximo del valor que resulta de multiplicar la similaridad de cada palabra por (1- la frecuencia de aparición de esa palabra en el corpus).
 
 ### Sugerencia
 
