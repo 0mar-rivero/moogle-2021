@@ -1,4 +1,6 @@
 ﻿using System.Diagnostics;
+using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.Json;
 using Corpus.Tools;
@@ -109,13 +111,15 @@ public class Query {
 			if (set.Count > 1) Proximity.Add(set);
 		}
 	}
+
 	/// <summary>
 	/// Aumentael peso de las palabras señaladas con el operador de relevancia.
 	/// </summary>
 	/// <param name="rawText">Lista con las palabras originales de la consulta.</param>
 	/// <param name="text">Diccionario con los valores de ocurrencias de las palabras.</param>
-	private static void ProcessPriority(List<string> rawText, IDictionary<string, double> text) {
-		foreach (var word in rawText.Select(Tools.Tools.TrimPunctuation).Where(word => word is not ""))
+	private void ProcessPriority(List<string> rawText, IDictionary<string, double> text) {
+		foreach (var word in rawText.Select(Tools.Tools.TrimPunctuation)
+			         .Where(word => word is not "" && !Exclusions.Contains(word)))
 			text[word] += Math.Pow(Math.E, word.TakeWhile(t => t is '^' or '*').Count(t => t is '*')) - 1;
 	}
 
